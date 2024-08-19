@@ -22,16 +22,36 @@ type AllPostCommentsDb = [postDb: PostDb[], commentDb: CommentDb[]];
 const url: string = "https://jsonplaceholder.typicode.com";
 
 async function getPost() {
-  return await axios.get(`${url}/posts`).then((posts) => posts.data);
+  return axios.get(`${url}/posts`).then((posts) => posts.data);
 }
 
 async function getComment() {
-  return await axios.get(`${url}/comments`).then((comments) => comments.data);
+  return axios.get(`${url}/comments`).then((comments) => comments.data);
 }
 
-async function print(){
-    const post = getPost;
-    console.log(post);
+async function getAllatOnce(): Promise<AllPostCommentsDb> {
+  const posts = getPost();
+  const comments = getComment();
+  return await Promise.all([posts, comments]);
 }
 
-print();
+async function postMatchComments() {
+  const playtime: string = "총 구동 시간";
+  console.time(playtime);
+  const [postsdata, commentsdata]: AllPostCommentsDb = await getAllatOnce();
+
+  const postMatchComments: PostMatchCommentsDb[] = postsdata.map((post) => {
+    const result = {
+      ...post,
+      comments: commentsdata.filter((comments) => {
+        return comments.postId === post.id;
+      }),
+    };
+    return result;
+  });
+
+  console.log(JSON.stringify(postMatchComments, null, 2));
+  console.timeEnd(playtime);
+}
+
+postMatchComments();
